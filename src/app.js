@@ -12,7 +12,13 @@ function app(_node, _update, _view, _model) {
 
   // update model state and view
   function dispatch(_msg) {
-
+    model = _update(_msg, model)
+    const updatedView = _view(dispatch, model)
+    // compare currentView to updatedView
+    const patches = diff(currentView, updatedView)
+    // Update the DOM with the results of a diff
+    rootNode = patch(rootNode, patches)
+    currentView = updatedView
   }
 }
 

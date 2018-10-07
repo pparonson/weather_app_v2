@@ -1,6 +1,5 @@
 const initModel = {
   nextId: 4
-  , editId: null
   , city: "Denver"
   , temperature: 81
   , low: 55

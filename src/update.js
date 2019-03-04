@@ -1,6 +1,9 @@
+import * as R from "ramda"
+
 const MSGS = {
   CITY_INPUT: "CITY_INPUT"
   , ADD_LOCATION: "ADD_LOCATION"
+  , REMOVE_LOCATION: "REMOVE_LOCATION"
 }
 
 export function cityInputMsg(_value) {
@@ -16,6 +19,13 @@ export function addLocationMsg() {
   }
 }
 
+export function removeLocationMsg(_id) {
+  return {
+    type: MSGS.REMOVE_LOCATION
+    , id: _id
+  }
+}
+
 function update(_msg, _model) {
   if (_msg.type === "CITY_INPUT") {
     // update the model
@@ -26,6 +36,15 @@ function update(_msg, _model) {
   }
   if (_msg.type === "ADD_LOCATION") {
     return add(_model)
+  }
+  if (_msg.type === "REMOVE_LOCATION") {
+    const {id} = _msg
+    const {locations} = _model
+    const updatedLocations = R.reject(R.propEq("id", id), locations)
+    return {
+      ..._model
+      , locations: updatedLocations
+    }
   }
 
   // default case

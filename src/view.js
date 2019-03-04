@@ -5,6 +5,7 @@ import * as R from "ramda"
 import {
   cityInputMsg
   , addLocationMsg
+  , removeLocationMsg
 } from "./update"
 
 const {
@@ -23,13 +24,13 @@ const {
   , button
 } = hh(h)
 
-function _table(_className, _locations) {
+function _table(_dispatch, _className, _locations) {
   if (_locations.length === 0) {
   return div({className: "mv2 i black-50"}, "No locations to display...");
 }
   return table({className: _className}, [
     tableHead("")
-    , tableBody("", _locations)
+    , tableBody(_dispatch, "", _locations)
   ])
 }
 
@@ -47,19 +48,23 @@ function headerRow(_className) {
   ])
 }
 
-function tableBody(_className, _locations) {
+function tableBody(_dispatch, _className, _locations) {
   // rows is an array of table row elements
-  const rows = R.map(R.partial(tableRow, ["stripe-dark"]), _locations)
+  const rows = R.map(R.partial(tableRow, [_dispatch, "stripe-dark"]), _locations)
   return tbody({className: _className}, [...rows])
 }
 
-function tableRow(_className, _item) {
+function tableRow(_dispatch, _className, _item) {
+  const {id} = _item
   return tr({className: _className}, [
     cell(td, "pa2", _item.city)
     , cell(td, "pa2 tr", _item.temperature)
     , cell(td, "pa2 tr", _item.low)
     , cell(td, "pa2 tr", _item.high)
-    , cell(td, "pa2 tr", i({className: "ph1 fas fa-times dim pointer"}))
+    , cell(td, "pa2 tr", i({
+      className: "ph1 fas fa-times dim pointer"
+      , onclick: () => _dispatch(removeLocationMsg(id))
+    }))
   ])
 }
 
@@ -101,7 +106,7 @@ function view(_dispatch, _model) {
     , [
       h1({className: "f2 pv2 bb"}, "Weather APP V2")
       , formView(_dispatch, _model)
-      , _table("w-100 collapse mv2", _model.locations)
+      , _table(_dispatch, "w-100 collapse mv2", _model.locations)
       , pre( JSON.stringify(_model, null, 2) )
     ])
 }

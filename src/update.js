@@ -4,7 +4,11 @@ const MSGS = {
   CITY_INPUT: "CITY_INPUT"
   , ADD_LOCATION: "ADD_LOCATION"
   , REMOVE_LOCATION: "REMOVE_LOCATION"
+  , HTTP_SUCCESS: "HTTP_SUCCESS"
 }
+
+const APP_ID = "94b64a6167479ba6904363088af58651"
+const OPEN_WEATHER_MAP_URL = "http://api.openweathermap.org/data/2.5/weather?units=imperial"
 
 export function cityInputMsg(_value) {
   return {
@@ -26,6 +30,14 @@ export function removeLocationMsg(_id) {
   }
 }
 
+const httpSuccessMsg = R.curry((_id, _res) => {
+  return {
+    type: MSGS.HTTP_SUCCESS
+    , id: _id
+    , res: _res
+  }
+})
+
 function update(_msg, _model) {
   if (_msg.type === "CITY_INPUT") {
     // update the model
@@ -41,6 +53,30 @@ function update(_msg, _model) {
     const {id} = _msg
     const {locations} = _model
     const updatedLocations = R.reject(R.propEq("id", id), locations)
+    return {
+      ..._model
+      , locations: updatedLocations
+    }
+  }
+  if (_msg.type === "HTTP_SUCCESS") {
+    const {id, res} = _msg
+    const {locations} = _model
+    const {temp, temp_min, temp_max} = R.pathOr({}, ["data", "main"], res)
+    const updatedLocations = R.map(location => {
+      if (location.id === id) {
+        // override the city object
+        return {
+          ...location
+          , temp: Math.round(temp)
+          , temp_min: Math.round(temp_min)
+          , temp_max: Math.round(temp_max)
+        }
+      } else {
+        // else return location untouched
+        return location
+      }
+    }, locations)
+    // return a new obj overriding the locations array
     return {
       ..._model
       , locations: updatedLocations
@@ -64,18 +100,30 @@ function add(_model) {
   }
   // overwrite list in model
   const updatedLocations = R.prepend(location, locations)
-  
+
   // overwrite model
-  return {
-    ..._model
-    // overwrite
-    , nextId: nextId + 1
-    , city: ""
-    , temperature: 0
-    , low: 0
-    , high: 0
-    , locations: updatedLocations
-  }
+  return [{
+      ..._model
+      // overwrite
+      , nextId: nextId + 1
+      , city: ""
+      , temperature: 0
+      , low: 0
+      , high: 0
+      , locations: updatedLocations
+    }
+    , {
+      request: {url: weatherUrl(city)}
+      // partial application
+      , successMsg: httpSuccessMsg(nextId)
+    }
+  ]
+}
+
+// api call: api.openweathermap.org/data/2.5/weather?q={city name}
+function weatherUrl(location) {
+  const encodedLocation = encodeURIComponent(location)
+  return `${OPEN_WEATHER_MAP_URL}&q=${encodedLocation}&appid=${APP_ID}`
 }
 
 export default update

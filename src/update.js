@@ -53,7 +53,7 @@ function update(_msg, _model) {
 
 // helper fns
 function add(_model) {
-  const {nextId, city, temperature, low, high} = _model
+  const {nextId, city, temperature, low, high, locations} = _model
   // create a new location obj to add to list
   const location = {
     id: nextId
@@ -63,11 +63,8 @@ function add(_model) {
     , high: "?"
   }
   // overwrite list in model
-  const locations = [
-    ..._model.locations
-    // overwrite
-    , location
-  ]
+  const updatedLocations = R.prepend(location, locations)
+  
   // overwrite model
   return {
     ..._model
@@ -77,7 +74,7 @@ function add(_model) {
     , temperature: 0
     , low: 0
     , high: 0
-    , locations
+    , locations: updatedLocations
   }
 }
 

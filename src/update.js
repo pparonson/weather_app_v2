@@ -30,6 +30,7 @@ export function removeLocationMsg(_id) {
   }
 }
 
+// this is used for the response data from the openweathermap api
 const httpSuccessMsg = R.curry((_id, _res) => {
   return {
     type: MSGS.HTTP_SUCCESS
@@ -47,6 +48,7 @@ function update(_msg, _model) {
     }
   }
   if (_msg.type === "ADD_LOCATION") {
+    // looks to return an array containing a msg url request and the model
     return add(_model)
   }
   if (_msg.type === "REMOVE_LOCATION") {
@@ -61,15 +63,16 @@ function update(_msg, _model) {
   if (_msg.type === "HTTP_SUCCESS") {
     const {id, res} = _msg
     const {locations} = _model
+    // res.data.main
     const {temp, temp_min, temp_max} = R.pathOr({}, ["data", "main"], res)
     const updatedLocations = R.map(location => {
       if (location.id === id) {
-        // override the city object
+        // edit the location object
         return {
           ...location
-          , temp: Math.round(temp)
-          , temp_min: Math.round(temp_min)
-          , temp_max: Math.round(temp_max)
+          , temperature: Math.round(temp)
+          , low: Math.round(temp_min)
+          , high: Math.round(temp_max)
         }
       } else {
         // else return location untouched
@@ -89,7 +92,7 @@ function update(_msg, _model) {
 
 // helper fns
 function add(_model) {
-  const {nextId, city, temperature, low, high, locations} = _model
+  const {nextId, city, locations} = _model
   // create a new location obj to add to list
   const location = {
     id: nextId
@@ -112,6 +115,7 @@ function add(_model) {
       , high: 0
       , locations: updatedLocations
     }
+    // request msg obj
     , {
       request: {url: weatherUrl(city)}
       // partial application
